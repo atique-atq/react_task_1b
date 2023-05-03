@@ -1,12 +1,15 @@
-import React from "react";
+import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 import MkdSDK from "../utils/MkdSDK";
 import { useNavigate } from "react-router-dom";
 import { AuthContext } from "../authContext";
+import SnackBar from "../components/SnackBar";
 
 const AdminLoginPage = () => {
+  const ADMIN = 'admin';
+  const CHECKED_RESPONSE = 'OK';
   const schema = yup
     .object({
       email: yup.string().email().required(),
@@ -24,15 +27,20 @@ const AdminLoginPage = () => {
   } = useForm({
     resolver: yupResolver(schema),
   });
+  const [showSnackBar, setShowSnackBar] = useState(false);
 
   const onSubmit = async (data) => {
     let sdk = new MkdSDK();
     //TODO
     try {
-
-      const user = await sdk.login(data.email, data.password, 'admin');
-      dispatch({ type: "LOGIN", payload: user });
-      // navigate("/admin/dashboard");
+      const user = await sdk.login(data.email, data.password, ADMIN);
+      const checkRole = await sdk.check(ADMIN);
+      if (checkRole.message.toUpperCase() === CHECKED_RESPONSE){
+        dispatch({ type: "LOGIN", payload: user });
+        setShowSnackBar(true);
+        console.log('snack bar state called');
+        navigate("/admin/dashboard");
+      }
     } catch (error) {
       setError("email", { type: "manual", message: "Invalid email or password" });
     }
@@ -44,6 +52,7 @@ const AdminLoginPage = () => {
         onSubmit={handleSubmit(onSubmit)}
         className="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4 mt-8 "
       >
+        {showSnackBar && <SnackBar />}
         <div className="mb-4">
           <label
             className="block text-gray-700 text-sm font-bold mb-2"

@@ -14,7 +14,6 @@ export default function MkdSDK() {
   };
   
   this.login = async function (email, password, role) {
-    console.log('here in the login : ');
     //TODO
     const payload = { email, password, role };
     this.setTable("lambda")
@@ -43,6 +42,8 @@ export default function MkdSDK() {
     }
   
     localStorage.setItem("token", jsonLogin.token);
+    localStorage.setItem("role", jsonLogin.role);
+    jsonLogin;
   };
 
   this.getHeader = function () {
@@ -115,32 +116,32 @@ export default function MkdSDK() {
   };  
 
   this.check = async function (role) {
-    //TODO
-  const payload = { role };
-
-  const header = {
-    "Content-Type": "application/json",
-    "x-project": base64Encode,
-    Authorization: "Bearer " + localStorage.getItem("token"),
-  };
-
-  const checkResult = await fetch(
-    this._baseurl + "/v1/api/check",
-    {
-      method: "post",
-      headers: header,
-      body: JSON.stringify(payload),
+    const payload = {
+      "role": role,
     }
-  );
-  const jsonCheck = await checkResult.json();
+    const header = {
+      "Content-Type": "application/json",
+      "x-project": base64Encode,
+      Authorization: "Bearer " + localStorage.getItem("token"),
+    };
 
-  if (checkResult.status === 401) {
-    throw new Error(jsonCheck.message);
-  }
+    const checkResult = await fetch(
+      this._baseurl + "/v2/api/lambda/check",
+      {
+        method: "post",
+        headers: header,
+        body: JSON.stringify(payload),
+      }
+    );
+    const jsonCheck = await checkResult.json();
 
-  if (checkResult.status === 403) {
-    throw new Error(jsonCheck.message);
-  }
+    if (checkResult.status === 401) {
+      throw new Error(jsonCheck.message);
+    }
+
+    if (checkResult.status === 403) {
+      throw new Error(jsonCheck.message);
+    }
 
   return jsonCheck;
 
